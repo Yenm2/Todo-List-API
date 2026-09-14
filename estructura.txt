@@ -1,0 +1,23 @@
+src/
+├── config/             # Variables de entorno, constantes de configuración
+├── middlewares/        # Autenticación (JWT), manejo global de errores, rate limiting
+├── shared/             # Utilidades transversales (logger, helpers de paginación)
+├── modules/ (o domains/)
+│   ├── auth/
+│   │   ├── auth.controller.ts    # Manejo de req/res, códigos HTTP
+│   │   ├── auth.service.ts       # Hash de passwords, firma de tokens, lógica de login/registro
+│   │   ├── auth.repository.ts    # Consultas a DB de usuarios (si no está separado en users/)
+│   │   ├── auth.schemas.ts       # Validación de payloads de entrada (DTOs/Zod/Joi)
+│   │   └── user.model.ts         # Entidad / Schema de base de datos
+│   └── todos/
+│       ├── todo.controller.ts    # Endpoints CRUD, extracción de user_id de la sesión
+│       ├── todo.service.ts       # Reglas de negocio (ownership, transiciones de estado)
+│       ├── todo.repository.ts    # Queries SQL/ORM filtrados estrictamente por user_id
+│       ├── todo.schemas.ts       # Validaciones de create, update y query params (page, limit, status)
+│       └── todo.model.ts         # Entidad Todo
+├── routes/                       # Ensamblado de routers y aplicación de middlewares
+│   ├── auth.routes.ts
+│   ├── todo.routes.ts
+│   └── index.ts
+├── db/                           # Conexión a la base de datos, migraciones, seeds
+└── server.ts                     # Entrypoint (inicio del servidor HTTP)

@@ -3,16 +3,18 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Patch,
   Post,
 } from '@nestjs/common';
-import { TodoService } from './todo.service';
-import {
+import { TodoService } from './todo.service.js';
+import type {
   CreateTodoSchema,
   UpdateTodoSchema,
-} from './todo.schemas';
+} from './todo.schemas.js';
 
 @Controller('todos')
 export class TodoController {
@@ -42,6 +44,7 @@ export class TodoController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
   delete(@Param('id', ParseIntPipe) id: number) {
     return this.todoService.delete(id);
   }

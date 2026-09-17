@@ -10,6 +10,7 @@ import { TodoRepository } from './todo.repository.js';
 
 type TodoRow = RowDataPacket & {
 	id: number;
+	user_id: number;
 	nombre: string;
 	descripcion: string;
 	created_at: Date;
@@ -21,14 +22,22 @@ export class MysqlTodoRepository implements TodoRepository {
 
 	async findAll(): Promise<Todo[]> {
 		const [rows] = await this.mysql.pool.query<TodoRow[]>(
-			'SELECT id, nombre, descripcion, created_at FROM todo ORDER BY id DESC',
+			'SELECT id, user_id, nombre, descripcion, created_at FROM todo ORDER BY id DESC',
+		);
+		return rows.map((row) => this.toTodo(row));
+	}
+
+	async findByUserId(userId: number): Promise<Todo[]> {
+		const [rows] = await this.mysql.pool.query<TodoRow[]>(
+			'SELECT id, user_id, nombre, descripcion, created_at FROM todo WHERE user_id = ? ORDER BY id DESC',
+			[userId],
 		);
 		return rows.map((row) => this.toTodo(row));
 	}
 
 	async findById(id: number): Promise<Todo | null> {
 		const [rows] = await this.mysql.pool.query<TodoRow[]>(
-			'SELECT id, nombre, descripcion, created_at FROM todo WHERE id = ?',
+			'SELECT id, user_id, nombre, descripcion, created_at FROM todo WHERE id = ?',
 			[id],
 		);
 		return rows[0] ? this.toTodo(rows[0]) : null;
@@ -36,8 +45,8 @@ export class MysqlTodoRepository implements TodoRepository {
 
 	async create(data: CreateTodoSchema): Promise<Todo> {
 		const [result] = await this.mysql.pool.execute<ResultSetHeader>(
-			'INSERT INTO todo (nombre, descripcion) VALUES (?, ?)',
-			[data.nombre, data.descripcion],
+			'INSERT INTO todo (user_id, nombre, descripcion) VALUES (?, ?, ?)',
+			[data.userId, data.nombre, data.descripcion],
 		);
 		const todo = await this.findById(result.insertId);
 		if (!todo) {
@@ -77,6 +86,7 @@ export class MysqlTodoRepository implements TodoRepository {
 	private toTodo(row: TodoRow): Todo {
 		return {
 			id: row.id,
+			userId: row.user_id,
 			nombre: row.nombre,
 			descripcion: row.descripcion,
 			createdAt: row.created_at,

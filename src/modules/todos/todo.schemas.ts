@@ -1,4 +1,5 @@
 export interface CreateTodoSchema {
+	userId: number;
 	nombre: string;
 	descripcion: string;
 }

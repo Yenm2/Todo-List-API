@@ -1,114 +1,270 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Todo List API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend HTTP para gestionar usuarios y tareas (`todos`). Está construido con
+NestJS, TypeScript y MySQL, y utiliza JWT para autenticar la consulta de tareas
+del usuario actual.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Requisitos
 
-## Description
+- Node.js compatible con las versiones indicadas por el proyecto.
+- npm.
+- Docker y Docker Compose (recomendado para ejecutar MySQL).
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Instalación y ejecución
 
-## Project setup
+1. Instala las dependencias:
 
-```bash
-$ npm install
+   ```bash
+   npm install
+   ```
+
+2. Crea el archivo de entorno a partir de `.env.example` y configura la
+   conexión. Para la base de datos incluida en `db/compose.yaml`, los valores
+   mínimos son:
+
+   ```dotenv
+   PORT=3000
+   DB_HOST=localhost
+   DB_PORT=3306
+   DB_USER=root
+   DB_PASSWORD=pass
+   DB_NAME=app
+   JWT_SECRET=una-clave-larga-y-segura
+   ```
+
+3. Inicia MySQL:
+
+   ```bash
+   docker compose -f db/compose.yaml up -d
+   ```
+
+   El script `db/mysql/init.sql` se ejecuta únicamente cuando el volumen de
+   MySQL se crea por primera vez.
+
+4. Inicia la API:
+
+   ```bash
+   npm run start:dev
+   ```
+
+   La API queda disponible en `http://localhost:3000`. Para producción:
+
+   ```bash
+   npm run build
+   npm run start:prod
+   ```
+
+## Autenticación
+
+El registro y el login devuelven un JWT con una vigencia de una hora:
+
+```json
+{
+  "token": "eyJ...",
+  "userId": 1
+}
 ```
 
-## Compile and run the project
+Para los endpoints protegidos se debe enviar:
 
-```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```http
+Authorization: Bearer <token>
 ```
 
-## Run tests
+Las contraseñas registradas mediante la API se almacenan con bcrypt. El usuario
+insertado directamente por `db/mysql/init.sql` usa el valor `menny` sin hash,
+por lo que no debe utilizarse como credencial de login sin corregir el seed.
 
-```bash
-# unit tests
-$ npm run test
+## API
 
-# e2e tests
-$ npm run test:e2e
+La URL base es `http://localhost:3000`.
 
-# test coverage
-$ npm run test:cov
+### Registro
+
+```http
+POST /auth/register
+Content-Type: application/json
 ```
 
-## Deployment
+Body:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+```json
+{
+  "username": "ana",
+  "password": "secreto123"
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Responde `201 Created` con `{ "token": "...", "userId": 2 }`. Si el usuario ya
+existe, responde `409 Conflict`.
 
-## Observability
+### Login
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+```http
+POST /auth/login
+Content-Type: application/json
+```
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+Body:
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+```json
+{
+  "username": "ana",
+  "password": "secreto123"
+}
+```
 
-## Resources
+Responde `201 Created` con el token y el identificador del usuario. Las
+credenciales inválidas producen `401 Unauthorized`.
 
-Check out a few resources that may come in handy when working with NestJS:
+### Listar todos
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```http
+GET /todos
+```
 
-## Support
+Devuelve todos los registros, ordenados por `id` descendente:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```json
+[
+  {
+    "id": 1,
+    "userId": 2,
+    "nombre": "Comprar leche",
+    "descripcion": "Pasar por el supermercado",
+    "createdAt": "2026-09-17T16:20:00.000Z"
+  }
+]
+```
 
-## Stay in touch
+Este endpoint es público en la implementación actual.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Listar todos de un usuario
 
-## License
+```http
+GET /todos/user/:userId
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Ejemplo:
+
+```bash
+curl http://localhost:3000/todos/user/2
+```
+
+También es público actualmente; el servicio filtra por `user_id`.
+
+### Listar mis todos
+
+```http
+GET /todos/me
+Authorization: Bearer <token>
+```
+
+Usa el `userId` contenido en el JWT y no acepta el identificador por query o
+body. Sin token o con un token inválido responde `401 Unauthorized`.
+
+### Consultar un todo
+
+```http
+GET /todos/:id
+```
+
+Ejemplo:
+
+```bash
+curl http://localhost:3000/todos/1
+```
+
+Responde `404 Not Found` si no existe. Los parámetros que no sean enteros
+responden `400 Bad Request`.
+
+### Crear un todo
+
+```http
+POST /todos
+Content-Type: application/json
+```
+
+Body:
+
+```json
+{
+  "userId": 2,
+  "nombre": "Comprar leche",
+  "descripcion": "Pasar por el supermercado"
+}
+```
+
+Responde `201 Created` con el todo creado. La API actual no protege este
+endpoint con JWT: el `userId` se recibe del body.
+
+### Actualizar un todo
+
+```http
+PATCH /todos/:id
+Content-Type: application/json
+```
+
+Se pueden enviar uno o ambos campos:
+
+```json
+{
+  "nombre": "Comprar leche y pan",
+  "descripcion": "Comprar antes de las 18:00"
+}
+```
+
+Responde `200 OK` con el registro actualizado. Un body vacío deja el registro
+sin cambios; si el todo no existe responde `404 Not Found`.
+
+### Eliminar un todo
+
+```http
+DELETE /todos/:id
+```
+
+Responde `204 No Content`. Si el todo no existe responde `404 Not Found`.
+
+## Errores y validación
+
+NestJS convierte las excepciones del servicio en respuestas JSON con el status
+HTTP correspondiente. `ParseIntPipe` valida los parámetros `id` y `userId`.
+Los archivos `auth.schemas.ts` y `todo.schemas.ts` describen tipos y reglas,
+pero no hay un `ValidationPipe` ni un pipe de Zod registrado en `main.ts`;
+por ello, las reglas de esos esquemas no se aplican automáticamente a los
+requests actuales.
+
+## Scripts útiles
+
+| Comando | Uso |
+| --- | --- |
+| `npm run start:dev` | Ejecutar en desarrollo con watch |
+| `npm run build` | Compilar a `dist/` |
+| `npm run start:prod` | Ejecutar la compilación |
+| `npm run lint` | Ejecutar Oxlint |
+| `npm run format` | Formatear TypeScript |
+| `npm run test` | Ejecutar pruebas Vitest |
+| `npm run test:e2e` | Ejecutar pruebas end-to-end |
+
+La descripción de módulos, el flujo de una petición y las reglas para mantener
+el código están en [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+## CLI de prueba
+
+El script `cli/todo-cli.sh` permite probar rápidamente los endpoints desde
+Bash. No requiere dependencias adicionales aparte de `curl` y `sed`:
+
+```bash
+chmod +x cli/todo-cli.sh
+./cli/todo-cli.sh register ana secreto123
+./cli/todo-cli.sh mine
+./cli/todo-cli.sh create 1 "Comprar leche" "Pasar por el supermercado"
+./cli/todo-cli.sh list
+```
+
+`register` y `login` guardan el JWT en `~/.todo-list-api-token`; `mine` lo usa
+para llamar a `GET /todos/me`. Para apuntar a otro servidor:
+
+```bash
+TODO_API_URL=http://localhost:4000 ./cli/todo-cli.sh list
+```

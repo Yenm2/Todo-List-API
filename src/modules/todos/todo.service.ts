@@ -32,7 +32,7 @@ export class TodoService {
 	}
 
 	async update(id: number, data: UpdateTodoSchema) {
-		const todo = await this.todoRepository.update(id, data);
+		const todo = await this.todoRepository.update(id, data)
 
 		if(!todo) {
 			throw new NotFoundException('Todo no encontrado');

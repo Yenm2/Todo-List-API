@@ -90,6 +90,8 @@ export class MysqlTodoRepository implements TodoRepository {
 			nombre: row.nombre,
 			descripcion: row.descripcion,
 			createdAt: row.created_at,
+			estado: row.estado,
+			prioridad: row.prioridad,
 		};
 	}
 }

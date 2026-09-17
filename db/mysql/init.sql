@@ -12,6 +12,8 @@ CREATE TABLE todo (
     user_id BIGINT NOT NULL,
     nombre VARCHAR(150) NOT NULL,
     descripcion VARCHAR(255) NOT NULL,
+    estado ENUM('pendiente', 'en progreso', 'completado') DEFAULT 'pendiente',
+    prioridad ENUM('baja', 'media', 'alta') DEFAULT 'media',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_todo_usuario
         FOREIGN KEY (user_id) REFERENCES usuarios(id)

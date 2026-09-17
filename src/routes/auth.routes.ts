@@ -1,7 +1,6 @@
 import { Router } from 'express';
-import { AuthController } from '../modules/auth/auth.controller.js';
 import { AuthService } from '../modules/auth/auth.service.js';
-import { AuthRepository } from '../modules/auth/auth.repository.js';
+import { MysqlAuthRepository } from '../modules/auth/mysql-auth.repository.js';
 import { registerSchema, loginSchema } from '../modules/auth/auth.schemas.js';
 import { MysqlService } from '../database/mysql.service.js';
 
@@ -15,13 +14,16 @@ const validate = (schema: any) => (req: any, res: any, next: any) => {
 };
 
 export function createAuthRouter(mysql: MysqlService) {
-  const authRepo = new AuthRepository(mysql);
+  const authRepo = new MysqlAuthRepository(mysql);
   const authService = new AuthService(authRepo);
-  const authController = new AuthController(authService);
   const authRouter = Router();
 
-  authRouter.post('/register', validate(registerSchema), authController.register);
-  authRouter.post('/login', validate(loginSchema), authController.login);
+  authRouter.post('/register', validate(registerSchema), async (req, res) => {
+    res.status(201).json(await authService.register(req.body));
+  });
+  authRouter.post('/login', validate(loginSchema), async (req, res) => {
+    res.json(await authService.login(req.body));
+  });
 
   return authRouter;
 }

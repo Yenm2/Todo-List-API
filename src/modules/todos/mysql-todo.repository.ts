@@ -14,6 +14,8 @@ type TodoRow = RowDataPacket & {
 	nombre: string;
 	descripcion: string;
 	created_at: Date;
+	estado: string;
+	prioridad: string;
 };
 
 @Injectable()
@@ -22,14 +24,14 @@ export class MysqlTodoRepository implements TodoRepository {
 
 	async findAll(): Promise<Todo[]> {
 		const [rows] = await this.mysql.pool.query<TodoRow[]>(
-			'SELECT id, user_id, nombre, descripcion, created_at FROM todo ORDER BY id DESC',
+			'SELECT id, user_id, nombre, descripcion, estado, prioridad, created_at FROM todo ORDER BY id DESC',
 		);
 		return rows.map((row) => this.toTodo(row));
 	}
 
 	async findByUserId(userId: number): Promise<Todo[]> {
 		const [rows] = await this.mysql.pool.query<TodoRow[]>(
-			'SELECT id, user_id, nombre, descripcion, created_at FROM todo WHERE user_id = ? ORDER BY id DESC',
+			'SELECT id, user_id, nombre, descripcion, estado, prioridad, created_at FROM todo WHERE user_id = ? ORDER BY id DESC',
 			[userId],
 		);
 		return rows.map((row: TodoRow) => this.toTodo(row));
@@ -37,7 +39,7 @@ export class MysqlTodoRepository implements TodoRepository {
 
 	async findById(id: number): Promise<Todo | null> {
 		const [rows] = await this.mysql.pool.query<TodoRow[]>(
-			'SELECT id, user_id, nombre, descripcion, created_at FROM todo WHERE id = ?',
+			'SELECT id, user_id, nombre, descripcion, estado, prioridad, created_at FROM todo WHERE id = ?',
 			[id],
 		);
 		return rows[0] ? this.toTodo(rows[0]) : null;
@@ -67,6 +69,18 @@ export class MysqlTodoRepository implements TodoRepository {
 			fields.push('descripcion = ?');
 			values.push(data.descripcion);
 		}
+
+		if (data.estado !== undefined) {
+			fields.push('estado = ?');
+			values.push(data.estado);
+		}
+
+
+		if (data.prioridad !== undefined) {
+			fields.push('prioridad = ?');
+			values.push(data.prioridad);
+		}
+
 		if (fields.length === 0) {
 			return this.findById(id);
 		}

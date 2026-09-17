@@ -7,6 +7,6 @@ export interface CreateTodoSchema {
 export interface UpdateTodoSchema {
 	nombre?: string;
 	descripcion?: string;
-	estado?: 'pendiente' | 'en progreso' | 'completado';
-	prioridad?: 'baja' | 'media' | 'alta';
+	estado?: string;
+	prioridad?: string;
 }

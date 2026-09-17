@@ -4,7 +4,7 @@ export interface Todo {
 	nombre: string;
 	descripcion: string;
 	createdAt: Date;
-	estado: 'pendiente' | 'en progreso' | 'completado';
-	prioridad: 'baja' | 'media' | 'alta';
+	estado: string;
+	prioridad: string;
 }
 

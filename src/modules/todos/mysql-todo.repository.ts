@@ -23,7 +23,7 @@ export class MysqlTodoRepository implements TodoRepository {
 		const [rows] = await this.mysql.pool.query<TodoRow[]>(
 			'SELECT id, nombre, descripcion, created_at FROM todo ORDER BY id DESC',
 		);
-		return rows.map((row) => this.toTodo(row));
+		return rows.map((row: TodoRow) => this.toTodo(row));
 	}
 
 	async findById(id: number): Promise<Todo | null> {

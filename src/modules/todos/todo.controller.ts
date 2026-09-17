@@ -9,7 +9,11 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import type { AuthenticatedRequest } from '../auth/jwt-auth.guard.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { TodoService } from './todo.service.js';
 import type {
   CreateTodoSchema,
@@ -23,6 +27,17 @@ export class TodoController {
   @Get()
   findAll() {
     return this.todoService.findAll();
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  findMyTodos(@Req() request: AuthenticatedRequest) {
+    return this.todoService.findByUserId(request.userId);
+  }
+
+  @Get('user/:userId')
+  findByUserId(@Param('userId', ParseIntPipe) userId: number) {
+    return this.todoService.findByUserId(userId);
   }
 
   @Get(':id')

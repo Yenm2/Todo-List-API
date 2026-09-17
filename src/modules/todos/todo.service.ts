@@ -13,6 +13,10 @@ export class TodoService {
 		return this.todoRepository.findAll();
 	}
 
+	findByUserId(userId: number) {
+		return this.todoRepository.findByUserId(userId);
+	}
+
 	async findById(id: number) {
 		const todo = await this.todoRepository.findById(id);
 

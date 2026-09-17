@@ -6,6 +6,7 @@ import {
 
 export abstract class TodoRepository {
 	abstract findAll(): Promise<Todo[]>;
+	abstract findByUserId(userId: number): Promise<Todo[]>;
 	abstract findById(id: number): Promise<Todo | null>;
 	abstract create(data: CreateTodoSchema): Promise<Todo>;
 	abstract update(

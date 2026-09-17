@@ -4,6 +4,6 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { TodosModule } from './modules/todos/todos.module.js';
 
 @Module({
-	imports: [DatabaseModule, AuthModule, TodosModule],
+  imports: [DatabaseModule, AuthModule, TodosModule],
 })
 export class AppModule {}
